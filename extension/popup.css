@@ -1,0 +1,66 @@
+body {
+      width: 280px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 0;
+      margin: 0;
+      background-color: #333; /* Ciemnoszary z obrazka */
+      color: #e8eaed; /* Jasny tekst */
+      border: 3px solid #1a73e8; /* Niebieska ramka z obrazka */
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+    .header img {
+      width: 45px;
+      height: 45px;
+      margin-right: 3px;
+      margin-top: 6px;
+    }
+    h2 {
+      font-size: 18px;
+      margin: 0;
+      color: #fff; /* Biały tytuł */
+      font-weight: bold;
+    }
+    #resultBox {
+      width: calc(100% - 24px); /* Panel wewnętrzny */
+      background-color: #444; /* Nieco jaśniejszy wewnętrzny panel */
+      margin: 0 12px 12px 12px;
+      padding: 16px;
+      box-sizing: border-box;
+      border-radius: 8px;
+      text-align: left;
+    }
+    p {
+      margin: 0;
+      padding-bottom: 8px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    p:last-child {
+      padding-bottom: 0;
+    }
+    .label {
+      color: #dadce0; /* Jasnoszary dla etykiet */
+      font-weight: bold;
+      margin-right: 6px;
+    }
+    .value {
+      font-weight: normal;
+    }
+    
+    /* Style dla dynamicznych wartości */
+    .value.safe { color: #81c995; } /* Zielony */
+    .value.phishing { color: #f28b82; } /* Czerwony */
+    .value.loading { color: #dadce0; } /* Jasnoszary */
+    .value.error { color: #f28b82; } /* Czerwony dla błędów */
