@@ -1,0 +1,37 @@
+services:
+  backend:
+    build: ./catch-the-phish-backend
+    container_name: nest_api
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./catch-the-phish-backend/.env
+    depends_on:
+      - rabbitmq
+    restart: on-failure
+    networks:
+      - phish-network
+  ml-service:
+    build: ./catch-the-phish-ml-service
+    container_name: ml_service
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./catch-the-phish-ml-service/.env
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+    networks:
+      - phish-network
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: on-failure
+    networks:
+      - phish-network
+
+networks:
+  phish-network:
+    driver: bridge

@@ -3,7 +3,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MlController } from './ml/ml.controller';
 import { MLService } from './ml/ml.service';
 import { ConfigModule } from './config/config.module';
-import ConfigService from './config/config.service';
 
 @Module({
   imports: [
@@ -14,10 +13,10 @@ import ConfigService from './config/config.service';
         name: 'ML_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://localhost:5672'],
+          urls: [process.env.RABBITMQ_URL || 'amqp://rabbitmq:5672'],
           queue: 'predict',
           queueOptions: {
-            durable: false,
+            durable: true,
           },
         },
       },
