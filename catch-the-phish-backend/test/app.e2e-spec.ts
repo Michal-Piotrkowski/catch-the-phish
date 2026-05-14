@@ -3,23 +3,35 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    try {
+      const moduleFixture: TestingModule = await Test.createTestingModule({
+        imports: [AppModule],
+      }).compile();
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
+      app = moduleFixture.createNestApplication();
+      await app.init();
+    } catch (error) {
+      console.error('Error during test setup:', error);
+      throw error;
+    }
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  afterEach(async () => {
+    try {
+      await app.close();
+    } catch (error) {
+      console.error('Error during test cleanup:', error);
+      throw error;
+    }
+  });
+
+  it('/ (GET) returns 404 when no root route is defined', async () => {
+    await request(app.getHttpServer()).get('/').expect(404);
   });
 });

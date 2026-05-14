@@ -23,7 +23,7 @@ import ConfigService from './config/config.service';
             ],
             queue: 'predict',
             queueOptions: {
-              durable: false,
+              durable: true,
             },
           },
         }),
