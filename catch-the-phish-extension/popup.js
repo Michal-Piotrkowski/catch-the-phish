@@ -1,9 +1,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const scoreValue = document.getElementById('scoreValue');
   const confidenceValue = document.getElementById('confidenceValue');
-  const NESTJS_API_URL = 'http://localhost:3000/detect';
+  const NESTJS_API_URL = 'http://localhost:3000/ml/detect';
 
-  // Funkcja resetująca panel wyników
   const setDisplay = (scoreText, confidenceText, className) => {
     scoreValue.textContent = scoreText;
     scoreValue.className = `value ${className}`;
@@ -12,16 +11,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   try {
-    // 1. Pobranie aktywnej karty
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    // DODANE ZABEZPIECZENIE: Sprawdzamy, czy to nie jest strona systemowa Chrome
     if (tab.url.startsWith('chrome://') || tab.url.startsWith('edge://') || tab.url.startsWith('https://chrome.google.com/webstore')) {
-      setDisplay("Zablokowana strona", "--", "error");
-      return; // Przerywamy dalsze działanie
+      setDisplay("Restricted page", "--", "error");
+      return;
     }
 
-    // 2. Wstrzyknięcie skryptu (reszta kodu zostaje tak jak była)
     const injectionResults = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: () => window.getSelection().toString().trim(),
@@ -29,39 +25,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const selectedText = injectionResults[0].result;
 
-    // 3. Sprawdzenie, czy użytkownik coś zaznaczył
     if (!selectedText) {
-      setDisplay("Wymagany", "--", "error");
+      setDisplay("Selection required", "--", "error");
       return;
     }
 
-    // 4. Rozpoczęcie analizy
-    setDisplay("Analiza AI...", "...", "loading");
+    setDisplay("Analyzing...", "...", "loading");
 
     const response = await fetch(NESTJS_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        text: selectedText,
-        metadata: { source: "popup_auto_grab" }
+        content: selectedText
       })
     });
 
-    if (!response.ok) throw new Error("Błąd serwera");
+    if (!response.ok) throw new Error("Server error");
 
     const result = await response.json();
 
-    // 5. Wyświetlenie samego wyniku i procentów zgodnie z nową strukturą
-    if (result.success && result.data) {
-      const isPhishing = result.data.is_phishing;
-      const confidence = (result.data.confidence * 100).toFixed(1) + "%";
-      
-      const scoreText = isPhishing ? "Wykryto Phishing!" : "Bezpieczny";
+    if (result.isPhishing !== undefined && result.confidence !== undefined) {
+      const isPhishing = result.isPhishing;
+      const confidence = (result.confidence * 100).toFixed(1) + "%";
+
+      const scoreText = isPhishing ? "Phishing Detected!" : "Safe";
       setDisplay(scoreText, confidence, isPhishing ? "phishing" : "safe");
     }
 
   } catch (error) {
-    console.error("Błąd:", error);
-    setDisplay("Błąd połączenia", "--", "error");
+    console.error("Error:", error);
+    setDisplay("Connection error", "--", "error");
   }
 });

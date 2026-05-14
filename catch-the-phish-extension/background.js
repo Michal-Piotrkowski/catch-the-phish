@@ -1,16 +1,13 @@
-// Adres endpointu NestJS (zmień port/ścieżkę w razie potrzeby)
-const NESTJS_API_URL = 'http://localhost:3000/detect';
+const NESTJS_API_URL = 'http://localhost:3000/ml/detect';
 
-// Tworzenie opcji w menu kontekstowym podczas instalacji wtyczki
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "analyze-phishing",
-    title: "Analizuj pod kątem phishingu",
+    title: "Analyze for phishing",
     contexts: ["selection"]
   });
 });
 
-// Nasłuchiwanie kliknięcia w menu kontekstowe
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "analyze-phishing") {
     const selectedText = info.selectionText;
@@ -18,7 +15,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
-// Funkcja wysyłająca dane do NestJS
 async function analyzeText(text) {
   try {
     const response = await fetch(NESTJS_API_URL, {
@@ -27,40 +23,35 @@ async function analyzeText(text) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        text: text,
-        metadata: {
-          source: "gmail" // Zgodnie z Twoim Data Flow
-        }
+        content: text
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Błąd HTTP: ${response.status}`);
+      throw new Error(`HTTP Error: ${response.status}`);
     }
 
     const result = await response.json();
 
-    // Obsługa struktury danych z serwera NestJS
-    if (result.success && result.data) {
-      showNotification(result.data.is_phishing, result.data.confidence);
+    if (result.isPhishing !== undefined && result.confidence !== undefined) {
+      showNotification(result.isPhishing, result.confidence);
     } else {
-      showError("Otrzymano nieprawidłową odpowiedź z serwera.");
+      showError("Invalid response from server.");
     }
 
   } catch (error) {
-    console.error("Błąd połączenia:", error);
-    showError("Nie udało się połączyć z serwerem NestJS.");
+    console.error("Connection error:", error);
+    showError("Failed to connect to the server.");
   }
 }
 
-// Wyświetlanie powiadomienia z wynikiem
 function showNotification(isPhishing, confidence) {
   const percentage = (confidence * 100).toFixed(1) + "%";
-  
-  const title = isPhishing ? "⚠️ Wykryto Phishing!" : "✅ Bezpieczny tekst";
+
+  const title = isPhishing ? "⚠️ Phishing Detected!" : "✅ Safe Text";
   const message = isPhishing
-    ? `Ten tekst to prawdopodobnie oszustwo. (Pewność: ${percentage})`
-    : `Tekst nie wykazuje cech phishingu. (Pewność: ${percentage})`;
+    ? `This text appears to be phishing. (Confidence: ${percentage})`
+    : `Text does not show phishing characteristics. (Confidence: ${percentage})`;
 
   chrome.notifications.create({
     type: "basic",
@@ -71,12 +62,11 @@ function showNotification(isPhishing, confidence) {
   });
 }
 
-// Wyświetlanie powiadomienia o błędzie
 function showError(errorMessage) {
   chrome.notifications.create({
     type: "basic",
     iconUrl: "icon.png",
-    title: "Błąd analizy",
+    title: "Analysis Error",
     message: errorMessage,
     priority: 1
   });

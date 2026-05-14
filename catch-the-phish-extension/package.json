@@ -1,0 +1,16 @@
+{
+  "name": "catch-the-phish-extension",
+  "version": "1.0.0",
+  "description": "AI-powered phishing detection Chrome extension",
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "dev": "echo 'Extension loads unpacked from catch-the-phish-extension folder'",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0"
+  }
+}
