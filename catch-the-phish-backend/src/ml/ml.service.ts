@@ -8,8 +8,8 @@ import MlResponseDto from 'src/dto/ml-response.dto';
 export class MLService {
   constructor(@Inject('ML_SERVICE') private readonly client: ClientProxy) {}
 
-  async detect(emailContentDto: EmailContentDto): Promise<MlResponseDto> {
-    return await firstValueFrom(
+  detect(emailContentDto: EmailContentDto): Promise<MlResponseDto> {
+    return firstValueFrom(
       this.client.send({ cmd: 'predict' }, emailContentDto),
     );
   }

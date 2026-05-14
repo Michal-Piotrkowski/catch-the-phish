@@ -3,22 +3,30 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MlController } from './ml/ml.controller';
 import { MLService } from './ml/ml.service';
 import { ConfigModule } from './config/config.module';
+import ConfigService from './config/config.service';
 
 @Module({
   imports: [
     ConfigModule,
 
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'ML_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: [process.env.RABBITMQ_URL || 'amqp://rabbitmq:5672'],
-          queue: 'predict',
-          queueOptions: {
-            durable: true,
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [
+              configService.get('RABBITMQ_URL') ||
+                'amqp://guest:guest@rabbitmq:5672/',
+            ],
+            queue: 'predict',
+            queueOptions: {
+              durable: false,
+            },
           },
-        },
+        }),
       },
     ]),
   ],
