@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Catch the Phish",
+  "version": "1.0",
+  "description": "Analizuje zaznaczony tekst pod kątem phishingu.",
+  "permissions": [
+    "contextMenus",
+    "notifications",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*" 
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Sprawdź tekst",
+    "default_icon": "icon.png"
+  },
+  "icons": {
+    "128": "icon.png"
+  }
+}
