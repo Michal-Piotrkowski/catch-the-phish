@@ -15,7 +15,7 @@ router = RabbitRouter(RABBIT_URL)
 app = FastAPI()
 app.include_router(router)
 
-model_path = "./fine_tuned_model"
+model_path = "michal-piotrkowski/catch-the-phish-distilbert"
 detector = pipeline("text-classification", model=model_path, tokenizer=model_path)
 
 class DataPayload(BaseModel):
