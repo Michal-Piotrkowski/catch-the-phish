@@ -1,4 +1,5 @@
 import os
+import asyncio
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from faststream.rabbit.fastapi import RabbitRouter
@@ -15,8 +16,12 @@ router = RabbitRouter(RABBIT_URL)
 app = FastAPI()
 app.include_router(router)
 
-model_path = "michal-piotrkowski/catch-the-phish-distilbert"
-detector = pipeline("text-classification", model=model_path, tokenizer=model_path)
+path_to_env_file = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path=path_to_env_file)
+
+model_id = os.getenv("MODEL_ID", "michal-piotrkowski/catch-the-phish-distilbert")
+detector = pipeline("text-classification", model=model_id , tokenizer=model_id )
+PHISHING_LABEL = detector.model.config.id2label.get(1, "LABEL_1")
 
 class DataPayload(BaseModel):
     content: str
@@ -34,30 +39,26 @@ def health_check():
 @router.subscriber(RabbitQueue("predict", durable=True))
 async def process_email_ai(request: NestJSRequest):
     email_content = request.data.content
-    words = email_content.split()
     
-    if not words:
+    if not email_content.strip():
         return {"isPhishing": False, "confidence": 0.0}
-        
-    chunk_size = 350
-    chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
-    
-    is_phishing = False
-    max_phishing_confidence = 0.0
-    max_safe_confidence = 0.0
 
-    for chunk in chunks:
-        result = detector(chunk, truncation=True, max_length=512)[0]
-        
-        if result['label'] == 'LABEL_1':
-            is_phishing = True
-            max_phishing_confidence = max(max_phishing_confidence, result['score'])
-        else:
-            max_safe_confidence = max(max_safe_confidence, result['score'])
+    inference_result = await asyncio.to_thread(
+        detector, 
+        email_content, 
+        truncation=True, 
+        max_length=512
+    )
+    result = inference_result[0]
+    threshold = 0.95
+    phishing_prob = result['score']   
 
-    final_confidence = max_phishing_confidence if is_phishing else max_safe_confidence
+    if result['label'] == PHISHING_LABEL:
+        is_phishing = phishing_prob >= threshold
+    else:
+        is_phishing = False
 
     return {
         "isPhishing": is_phishing,
-        "confidence": round(final_confidence, 4)
+        "confidence": round(phishing_prob, 4)
     }
