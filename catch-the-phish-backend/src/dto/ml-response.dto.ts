@@ -1,4 +1,4 @@
 export default class MlResponseDto {
-  isPhishing: boolean;
-  confidence: number;
+  isPhishing!: boolean;
+  confidence!: number;
 }
